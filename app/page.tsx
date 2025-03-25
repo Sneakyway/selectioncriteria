@@ -1,7 +1,21 @@
+"use client"
+
 import Link from "next/link"
 import { SiteFooter } from "@/components/site-footer"
+import { useEffect, useState } from "react"
 
 export default function LandingPage() {
+  // Use client-side rendering to avoid hydration issues
+  const [mounted, setMounted] = useState(false)
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
+
+  if (!mounted) {
+    return null // Return nothing during SSR to avoid hydration mismatch
+  }
+
   return (
     <main className="flex min-h-screen flex-col bg-[#f8f6f1] items-center overflow-hidden">
       <div className="flex flex-1 flex-col items-center justify-center px-4 py-16 md:py-24 w-full max-w-5xl">
@@ -39,7 +53,7 @@ export default function LandingPage() {
             Criteria with AI
           </h1>
 
-          <p className="text-center text-xl md:text-2xl mb-16">
+          <p className="text-center text-xl md:text-2xl mb-16 text-gray-700">
             AI will craft the full selection criteria, perfect it, humanize the tone, and it's totally free of cost.
           </p>
 

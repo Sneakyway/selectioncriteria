@@ -29,6 +29,8 @@ import {
   HelpCircle,
   Search,
   ArrowRight,
+  Moon,
+  Sun,
 } from "lucide-react"
 
 export default function AIGeneratorPage() {
@@ -41,6 +43,7 @@ export default function AIGeneratorPage() {
   const [proofreadContent, setProofreadContent] = useState("")
   const [isProofreading, setIsProofreading] = useState(false)
   const [activeTab, setActiveTab] = useState("preview")
+  const [darkMode, setDarkMode] = useState(false)
   const [formData, setFormData] = useState({
     criteriaQuestion: "",
     jobTitle: "",
@@ -74,6 +77,14 @@ export default function AIGeneratorPage() {
     }
   }, [generatedContent])
 
+  useEffect(() => {
+    if (darkMode) {
+      document.documentElement.classList.add("dark")
+    } else {
+      document.documentElement.classList.remove("dark")
+    }
+  }, [darkMode])
+
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target
     setFormData((prev) => ({ ...prev, [name]: value }))
@@ -82,6 +93,10 @@ export default function AIGeneratorPage() {
   const handleToggleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, checked } = e.target
     setFormData((prev) => ({ ...prev, [name]: checked }))
+  }
+
+  const toggleDarkMode = () => {
+    setDarkMode(!darkMode)
   }
 
   const generateResponse = async () => {
@@ -111,7 +126,7 @@ export default function AIGeneratorPage() {
         Education/Qualifications: ${formData.education}
         Current Employer: ${formData.currentEmployer || "Not specified"}
         Previous Employer: ${formData.previousEmployer || "Not specified"}
-        Candidate Name: ${formData.candidateName || "Not specified"}
+        Candidate First Name: ${formData.candidateName || "Not specified"}
         Candidate Strengths: ${formData.candidateStrengths || "Not specified"}
         
         Format: ${formatInstruction}
@@ -274,144 +289,10 @@ export default function AIGeneratorPage() {
     </div>
   )
 
-  const renderPreviewTab = () => (
-    <div className="bg-white p-6 rounded-lg shadow-md">
-      <h2 className="text-xl font-semibold mb-6 uppercase text-black">Generated Response</h2>
-
-      <div
-        ref={responseRef}
-        className="border border-gray-200 rounded-lg p-4 min-h-[400px] mb-4 bg-gray-50 overflow-y-auto"
-      >
-        {error ? (
-          <div className="text-red-500 p-4">
-            <p className="font-medium">Error:</p>
-            <p>{error}</p>
-            <p className="mt-2 text-sm">Please check your OpenAI API key and try again.</p>
-          </div>
-        ) : isGenerating ? (
-          <div className="flex flex-col items-center justify-center h-full">
-            <Loader2 className="w-8 h-8 text-blue-500 animate-spin mb-4" />
-            <p className="text-gray-600">Generating your selection criteria response...</p>
-          </div>
-        ) : generatedContent ? (
-          <div className="prose prose-sm max-w-none whitespace-pre-line">{generatedContent}</div>
-        ) : (
-          <div className="flex flex-col items-center justify-center h-full text-gray-400">
-            <FileText className="w-12 h-12 mb-4 opacity-30" />
-            <p className="text-center">
-              Fill in the questionnaire and click "Generate Response" to create your selection criteria response.
-            </p>
-          </div>
-        )}
-      </div>
-
-      {/* Word and Character Count */}
-      {generatedContent && (
-        <div className="text-sm text-gray-500 flex gap-4 mb-4">
-          <span>Words: {wordCount}</span>
-          <span>Characters: {charCount}</span>
-        </div>
-      )}
-
-      {generatedContent && (
-        <div className="flex flex-wrap gap-3 mb-6">
-          <button
-            onClick={() => copyToClipboard(generatedContent)}
-            className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-3 rounded-md transition-colors text-sm"
-          >
-            {copySuccess ? (
-              <>
-                <Check className="w-4 h-4" />
-                Copied!
-              </>
-            ) : (
-              <>
-                <Copy className="w-4 h-4" />
-                Copy to Clipboard
-              </>
-            )}
-          </button>
-
-          <button
-            onClick={() => downloadAsWord(generatedContent)}
-            className="flex items-center gap-2 bg-purple-600 hover:bg-purple-700 text-white px-4 py-3 rounded-md transition-colors text-sm"
-          >
-            <FileDown className="w-4 h-4" />
-            Download as Word
-          </button>
-
-          <button
-            onClick={() => downloadAsPdf(generatedContent)}
-            className="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white px-4 py-3 rounded-md transition-colors text-sm"
-          >
-            <FilePdf className="w-4 h-4" />
-            Download as PDF
-          </button>
-
-          <button
-            onClick={proofreadResponse}
-            disabled={isProofreading}
-            className="flex items-center gap-2 bg-amber-600 hover:bg-amber-700 text-white px-4 py-3 rounded-md transition-colors text-sm disabled:bg-gray-400 disabled:cursor-not-allowed"
-          >
-            {isProofreading ? (
-              <>
-                <Loader2 className="w-4 h-4 animate-spin" />
-                Proofreading...
-              </>
-            ) : (
-              <>
-                <CheckCircle className="w-4 h-4" />
-                Proofread & Enhance
-              </>
-            )}
-          </button>
-        </div>
-      )}
-
-      {/* Proofread Section */}
-      {proofreadContent && (
-        <div className="mt-8">
-          <h3 className="text-lg font-semibold mb-3 flex items-center uppercase text-black">
-            <CheckCircle className="w-5 h-5 mr-2 text-green-500" />
-            Proofread Version
-          </h3>
-
-          <div className="border border-green-200 rounded-lg p-4 bg-green-50 mb-4 overflow-y-auto max-h-[300px]">
-            <div className="prose prose-sm max-w-none whitespace-pre-line">{proofreadContent}</div>
-          </div>
-
-          <div className="flex flex-wrap gap-3">
-            <button
-              onClick={() => copyToClipboard(proofreadContent)}
-              className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-3 rounded-md transition-colors text-sm"
-            >
-              <Copy className="w-4 h-4" />
-              Copy Proofread Version
-            </button>
-
-            <button
-              onClick={() => downloadAsWord(proofreadContent)}
-              className="flex items-center gap-2 bg-purple-600 hover:bg-purple-700 text-white px-4 py-3 rounded-md transition-colors text-sm"
-            >
-              <FileDown className="w-4 h-4" />
-              Download as Word
-            </button>
-
-            <button
-              onClick={() => downloadAsPdf(proofreadContent)}
-              className="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white px-4 py-3 rounded-md transition-colors text-sm"
-            >
-              <FilePdf className="w-4 h-4" />
-              Download as PDF
-            </button>
-          </div>
-        </div>
-      )}
-    </div>
-  )
+  const renderPreviewTab = () => <div className="prose prose-sm max-w-none whitespace-pre-line">{generatedContent}</div>
 
   const renderHelpCenterTab = () => (
-    <div className="bg-white p-6 rounded-lg shadow-md">
+    <div>
       <div className="mb-6">
         <div className="relative">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
@@ -428,7 +309,7 @@ export default function AIGeneratorPage() {
         <p className="text-lg text-gray-600">Everything you need to know to create your best cover letter yet.</p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className="space-y-6">
         <div className="border border-gray-200 rounded-lg p-6 flex items-start">
           <div className="flex-1">
             <h3 className="text-xl font-semibold mb-2 text-gray-800">Getting Started</h3>
@@ -481,23 +362,32 @@ export default function AIGeneratorPage() {
   )
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col">
+    <div className={`min-h-screen ${darkMode ? "dark bg-gray-900" : "bg-gray-50"} flex flex-col`}>
       <div className="container mx-auto px-4 py-8 flex-grow">
-        <h1 className="text-3xl font-bold text-center mb-8">AI Selection Criteria Generator</h1>
+        <div className="flex justify-between items-center mb-8">
+          <h1 className="text-3xl font-bold text-center">AI Selection Criteria Generator</h1>
+          <button
+            onClick={toggleDarkMode}
+            className="p-2 rounded-full bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200"
+            aria-label={darkMode ? "Switch to light mode" : "Switch to dark mode"}
+          >
+            {darkMode ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+          </button>
+        </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
           {/* Questionnaire Section - 40% */}
-          <div className="lg:col-span-5 bg-white p-6 rounded-lg shadow-md">
-            <h2 className="text-xl font-semibold mb-6 flex items-center uppercase text-black">
+          <div className="lg:col-span-5 bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md">
+            <h2 className="text-xl font-semibold mb-6 flex items-center uppercase text-black dark:text-white">
               <FileText className="w-5 h-5 mr-2 text-blue-500" />
               Selection Criteria Questionnaire
             </h2>
 
-            <div className="space-y-4 max-h-[calc(100vh-200px)] overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
+            <div className="space-y-4 max-h-[calc(100vh-200px)] overflow-y-auto pr-2 thin-scrollbar">
               <div>
                 <label
                   htmlFor="criteriaQuestion"
-                  className="block text-sm font-medium text-black mb-1 flex items-center uppercase"
+                  className="block text-sm font-medium text-black dark:text-white mb-1 flex items-center uppercase"
                 >
                   <FileQuestion className="w-4 h-4 mr-2 text-blue-500" />
                   Selection Criteria Question*
@@ -509,69 +399,71 @@ export default function AIGeneratorPage() {
                   value={formData.criteriaQuestion}
                   onChange={handleInputChange}
                   placeholder="e.g., Demonstrated ability to work effectively in a team environment"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-sm h-24"
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-sm h-24"
                   required
                 />
               </div>
 
-              {/* Response Format and Tone */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label
-                    htmlFor="tone"
-                    className="block text-sm font-medium text-black mb-1 flex items-center uppercase"
-                  >
-                    <MessageSquare className="w-4 h-4 mr-2 text-blue-500" />
-                    Tone
-                    <InfoTooltip text="Choose the writing style for your response" />
-                  </label>
-                  <select
-                    id="tone"
-                    name="tone"
-                    value={formData.tone}
-                    onChange={handleInputChange}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-sm"
-                  >
-                    <option value="professional">Professional</option>
-                    <option value="confident">Confident</option>
-                    <option value="enthusiastic">Enthusiastic</option>
-                    <option value="formal">Formal</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-black mb-1 flex items-center justify-between uppercase">
-                    <div className="flex items-center">
-                      <Star className="w-4 h-4 mr-2 text-blue-500" />
-                      STAR Format
-                      <InfoTooltip text="STAR format helps structure your response with a clear Situation, Task, Action, Result" />
-                    </div>
-                    <div className="flex items-center">
-                      <label htmlFor="useStar" className="relative inline-flex items-center cursor-pointer">
-                        <input
-                          type="checkbox"
-                          id="useStar"
-                          name="useStar"
-                          className="sr-only"
-                          checked={formData.useStar}
-                          onChange={handleToggleChange}
-                        />
+              {/* STAR Format */}
+              <div>
+                <label className="block text-sm font-medium text-black dark:text-white mb-1 flex items-center justify-between uppercase">
+                  <div className="flex items-center">
+                    <Star className="w-4 h-4 mr-2 text-blue-500" />
+                    STAR Format{" "}
+                    <span className="text-xs ml-1 text-gray-500 dark:text-gray-400">
+                      (Situation, Task, Action, Result)
+                    </span>
+                    <InfoTooltip text="STAR format helps structure your response with a clear Situation, Task, Action, Result" />
+                  </div>
+                  <div className="flex items-center">
+                    <label htmlFor="useStar" className="relative inline-flex items-center cursor-pointer">
+                      <input
+                        type="checkbox"
+                        id="useStar"
+                        name="useStar"
+                        className="sr-only"
+                        checked={formData.useStar}
+                        onChange={handleToggleChange}
+                      />
+                      <div
+                        className={`w-10 h-5 rounded-full transition-colors ${formData.useStar ? "bg-blue-500" : "bg-gray-300 dark:bg-gray-600"}`}
+                      >
                         <div
-                          className={`w-10 h-5 rounded-full transition-colors ${formData.useStar ? "bg-blue-500" : "bg-gray-300"}`}
-                        >
-                          <div
-                            className={`absolute top-0.5 left-0.5 bg-white w-4 h-4 rounded-full transition-transform ${formData.useStar ? "translate-x-5" : "translate-x-0"}`}
-                          ></div>
-                        </div>
-                      </label>
-                    </div>
-                  </label>
-                </div>
+                          className={`absolute top-0.5 left-0.5 bg-white w-4 h-4 rounded-full transition-transform ${formData.useStar ? "translate-x-5" : "translate-x-0"}`}
+                        ></div>
+                      </div>
+                    </label>
+                  </div>
+                </label>
+              </div>
+
+              {/* Tone */}
+              <div>
+                <label
+                  htmlFor="tone"
+                  className="block text-sm font-medium text-black dark:text-white mb-1 flex items-center uppercase"
+                >
+                  <MessageSquare className="w-4 h-4 mr-2 text-blue-500" />
+                  Tone
+                  <InfoTooltip text="Choose the writing style for your response" />
+                </label>
+                <select
+                  id="tone"
+                  name="tone"
+                  value={formData.tone}
+                  onChange={handleInputChange}
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-sm"
+                >
+                  <option value="professional">Professional</option>
+                  <option value="confident">Confident</option>
+                  <option value="enthusiastic">Enthusiastic</option>
+                  <option value="formal">Formal</option>
+                </select>
               </div>
 
               {/* Humanize Toggle */}
               <div>
-                <label className="block text-sm font-medium text-black mb-1 flex items-center justify-between uppercase">
+                <label className="block text-sm font-medium text-black dark:text-white mb-1 flex items-center justify-between uppercase">
                   <div className="flex items-center">
                     <Sparkles className="w-4 h-4 mr-2 text-blue-500" />
                     Humanize Content
@@ -588,7 +480,7 @@ export default function AIGeneratorPage() {
                         onChange={handleToggleChange}
                       />
                       <div
-                        className={`w-10 h-5 rounded-full transition-colors ${formData.humanize ? "bg-blue-500" : "bg-gray-300"}`}
+                        className={`w-10 h-5 rounded-full transition-colors ${formData.humanize ? "bg-blue-500" : "bg-gray-300 dark:bg-gray-600"}`}
                       >
                         <div
                           className={`absolute top-0.5 left-0.5 bg-white w-4 h-4 rounded-full transition-transform ${formData.humanize ? "translate-x-5" : "translate-x-0"}`}
@@ -604,7 +496,7 @@ export default function AIGeneratorPage() {
                 <div>
                   <label
                     htmlFor="jobTitle"
-                    className="block text-sm font-medium text-black mb-1 flex items-center uppercase"
+                    className="block text-sm font-medium text-black dark:text-white mb-1 flex items-center uppercase"
                   >
                     <Briefcase className="w-4 h-4 mr-2 text-blue-500" />
                     Job Title*
@@ -617,7 +509,7 @@ export default function AIGeneratorPage() {
                     value={formData.jobTitle}
                     onChange={handleInputChange}
                     placeholder="e.g., Project Manager, Software Developer"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-sm"
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-sm"
                     required
                   />
                 </div>
@@ -625,7 +517,7 @@ export default function AIGeneratorPage() {
                 <div>
                   <label
                     htmlFor="experience"
-                    className="block text-sm font-medium text-black mb-1 flex items-center uppercase"
+                    className="block text-sm font-medium text-black dark:text-white mb-1 flex items-center uppercase"
                   >
                     <svg
                       viewBox="0 0 24 24"
@@ -645,7 +537,7 @@ export default function AIGeneratorPage() {
                     name="experience"
                     value={formData.experience}
                     onChange={handleInputChange}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-sm"
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-sm"
                   >
                     <option value="1-3">1-3 years</option>
                     <option value="3-5">3-5 years</option>
@@ -660,7 +552,7 @@ export default function AIGeneratorPage() {
                 <div>
                   <label
                     htmlFor="currentEmployer"
-                    className="block text-sm font-medium text-black mb-1 flex items-center uppercase"
+                    className="block text-sm font-medium text-black dark:text-white mb-1 flex items-center uppercase"
                   >
                     <Building className="w-4 h-4 mr-2 text-blue-500" />
                     Current Employer
@@ -673,14 +565,14 @@ export default function AIGeneratorPage() {
                     value={formData.currentEmployer}
                     onChange={handleInputChange}
                     placeholder="e.g., Acme Corporation"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-sm"
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-sm"
                   />
                 </div>
 
                 <div>
                   <label
                     htmlFor="previousEmployer"
-                    className="block text-sm font-medium text-black mb-1 flex items-center uppercase"
+                    className="block text-sm font-medium text-black dark:text-white mb-1 flex items-center uppercase"
                   >
                     <History className="w-4 h-4 mr-2 text-blue-500" />
                     Previous Employer
@@ -693,20 +585,20 @@ export default function AIGeneratorPage() {
                     value={formData.previousEmployer}
                     onChange={handleInputChange}
                     placeholder="e.g., XYZ Company"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-sm"
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-sm"
                   />
                 </div>
               </div>
 
-              {/* Candidate Name */}
+              {/* Candidate First Name */}
               <div>
                 <label
                   htmlFor="candidateName"
-                  className="block text-sm font-medium text-black mb-1 flex items-center uppercase"
+                  className="block text-sm font-medium text-black dark:text-white mb-1 flex items-center uppercase"
                 >
                   <User className="w-4 h-4 mr-2 text-blue-500" />
-                  Candidate Name
-                  <InfoTooltip text="Enter your full name to personalize the response" />
+                  Candidate First Name
+                  <InfoTooltip text="Enter your first name to personalize the response" />
                 </label>
                 <input
                   type="text"
@@ -714,15 +606,15 @@ export default function AIGeneratorPage() {
                   name="candidateName"
                   value={formData.candidateName}
                   onChange={handleInputChange}
-                  placeholder="e.g., John Smith"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-sm"
+                  placeholder="e.g., John"
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-sm"
                 />
               </div>
 
               <div>
                 <label
                   htmlFor="skills"
-                  className="block text-sm font-medium text-black mb-1 flex items-center uppercase"
+                  className="block text-sm font-medium text-black dark:text-white mb-1 flex items-center uppercase"
                 >
                   <Award className="w-4 h-4 mr-2 text-blue-500" />
                   Key Skills (comma separated)
@@ -735,14 +627,14 @@ export default function AIGeneratorPage() {
                   value={formData.skills}
                   onChange={handleInputChange}
                   placeholder="e.g., Project Management, Stakeholder Communication, Agile Methodologies"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-sm"
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-sm"
                 />
               </div>
 
               <div>
                 <label
                   htmlFor="achievements"
-                  className="block text-sm font-medium text-black mb-1 flex items-center uppercase"
+                  className="block text-sm font-medium text-black dark:text-white mb-1 flex items-center uppercase"
                 >
                   <svg
                     viewBox="0 0 24 24"
@@ -762,14 +654,14 @@ export default function AIGeneratorPage() {
                   value={formData.achievements}
                   onChange={handleInputChange}
                   placeholder="e.g., Led a team of 5 to deliver a project under budget, Increased efficiency by 30%"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-sm h-20"
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-sm h-20"
                 />
               </div>
 
               <div>
                 <label
                   htmlFor="education"
-                  className="block text-sm font-medium text-black mb-1 flex items-center uppercase"
+                  className="block text-sm font-medium text-black dark:text-white mb-1 flex items-center uppercase"
                 >
                   <GraduationCap className="w-4 h-4 mr-2 text-blue-500" />
                   Education/Qualifications
@@ -782,7 +674,7 @@ export default function AIGeneratorPage() {
                   value={formData.education}
                   onChange={handleInputChange}
                   placeholder="e.g., Bachelor's in Business, PMP Certification"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-sm"
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-sm"
                 />
               </div>
 
@@ -790,7 +682,7 @@ export default function AIGeneratorPage() {
               <div>
                 <label
                   htmlFor="candidateStrengths"
-                  className="block text-sm font-medium text-black mb-1 flex items-center uppercase"
+                  className="block text-sm font-medium text-black dark:text-white mb-1 flex items-center uppercase"
                 >
                   <Award className="w-4 h-4 mr-2 text-blue-500" />
                   Candidate Strengths
@@ -802,7 +694,7 @@ export default function AIGeneratorPage() {
                   value={formData.candidateStrengths}
                   onChange={handleInputChange}
                   placeholder="e.g., Leadership, Problem-solving, Attention to detail, Communication"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-sm h-20"
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-sm h-20"
                 />
               </div>
 
@@ -838,36 +730,172 @@ export default function AIGeneratorPage() {
 
           {/* Response Section - 60% */}
           <div className="lg:col-span-7 flex flex-col">
-            {/* Tab Navigation */}
-            <div className="flex justify-center mb-4">
-              <div className="inline-flex rounded-md border border-gray-200 overflow-hidden">
-                <button
-                  onClick={() => setActiveTab("preview")}
-                  className={`flex items-center px-6 py-2 ${
-                    activeTab === "preview"
-                      ? "bg-white text-red-500 border-b-2 border-red-500"
-                      : "bg-white text-gray-600 hover:bg-gray-50"
-                  }`}
-                >
-                  <Eye className="w-5 h-5 mr-2" />
-                  Preview
-                </button>
-                <button
-                  onClick={() => setActiveTab("help")}
-                  className={`flex items-center px-6 py-2 ${
-                    activeTab === "help"
-                      ? "bg-white text-red-500 border-b-2 border-red-500"
-                      : "bg-white text-gray-600 hover:bg-gray-50"
-                  }`}
-                >
-                  <HelpCircle className="w-5 h-5 mr-2" />
-                  Help Center
-                </button>
-              </div>
-            </div>
+            <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md">
+              <h2 className="text-xl font-semibold mb-6 uppercase text-black dark:text-white">Generated Response</h2>
 
-            {/* Content based on active tab */}
-            {activeTab === "preview" ? renderPreviewTab() : renderHelpCenterTab()}
+              {/* Tab Navigation - Moved inside the response box */}
+              <div className="flex mb-4">
+                <div className="inline-flex rounded-md border border-gray-200 dark:border-gray-700 overflow-hidden">
+                  <button
+                    onClick={() => setActiveTab("preview")}
+                    className={`flex items-center px-6 py-2 ${
+                      activeTab === "preview"
+                        ? "bg-white dark:bg-gray-800 text-red-500 border-b-2 border-red-500"
+                        : "bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
+                    }`}
+                  >
+                    <Eye className="w-5 h-5 mr-2" />
+                    Preview
+                  </button>
+                  <button
+                    onClick={() => setActiveTab("help")}
+                    className={`flex items-center px-6 py-2 ${
+                      activeTab === "help"
+                        ? "bg-white dark:bg-gray-800 text-red-500 border-b-2 border-red-500"
+                        : "bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
+                    }`}
+                  >
+                    <HelpCircle className="w-5 h-5 mr-2" />
+                    Help Center
+                  </button>
+                </div>
+              </div>
+
+              <div
+                ref={responseRef}
+                className="border border-gray-200 dark:border-gray-700 rounded-lg p-4 min-h-[400px] mb-4 bg-gray-50 dark:bg-gray-900 overflow-y-auto thin-scrollbar"
+              >
+                {activeTab === "help" ? (
+                  renderHelpCenterTab()
+                ) : error ? (
+                  <div className="text-red-500 p-4">
+                    <p className="font-medium">Error:</p>
+                    <p>{error}</p>
+                    <p className="mt-2 text-sm">Please check your OpenAI API key and try again.</p>
+                  </div>
+                ) : isGenerating ? (
+                  <div className="flex flex-col items-center justify-center h-full">
+                    <Loader2 className="w-8 h-8 text-blue-500 animate-spin mb-4" />
+                    <p className="text-gray-600 dark:text-gray-400">Generating your selection criteria response...</p>
+                  </div>
+                ) : generatedContent ? (
+                  renderPreviewTab()
+                ) : (
+                  <div className="flex flex-col items-center justify-center h-full text-gray-400 dark:text-gray-500">
+                    <FileText className="w-12 h-12 mb-4 opacity-30" />
+                    <p className="text-center">
+                      Fill in the questionnaire and click "Generate Response" to create your selection criteria
+                      response.
+                    </p>
+                  </div>
+                )}
+              </div>
+
+              {/* Word and Character Count */}
+              {generatedContent && activeTab === "preview" && (
+                <div className="text-sm text-gray-500 dark:text-gray-400 flex gap-4 mb-4">
+                  <span>Words: {wordCount}</span>
+                  <span>Characters: {charCount}</span>
+                </div>
+              )}
+
+              {generatedContent && activeTab === "preview" && (
+                <div className="flex flex-wrap gap-3 mb-6">
+                  <button
+                    onClick={() => copyToClipboard(generatedContent)}
+                    className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-3 rounded-md transition-colors text-sm"
+                  >
+                    {copySuccess ? (
+                      <>
+                        <Check className="w-4 h-4" />
+                        Copied!
+                      </>
+                    ) : (
+                      <>
+                        <Copy className="w-4 h-4" />
+                        Copy to Clipboard
+                      </>
+                    )}
+                  </button>
+
+                  <button
+                    onClick={() => downloadAsWord(generatedContent)}
+                    className="flex items-center gap-2 bg-purple-600 hover:bg-purple-700 text-white px-4 py-3 rounded-md transition-colors text-sm"
+                  >
+                    <FileDown className="w-4 h-4" />
+                    Download as Word
+                  </button>
+
+                  <button
+                    onClick={() => downloadAsPdf(generatedContent)}
+                    className="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white px-4 py-3 rounded-md transition-colors text-sm"
+                  >
+                    <FilePdf className="w-4 h-4" />
+                    Download as PDF
+                  </button>
+
+                  <button
+                    onClick={proofreadResponse}
+                    disabled={isProofreading}
+                    className="flex items-center gap-2 bg-amber-600 hover:bg-amber-700 text-white px-4 py-3 rounded-md transition-colors text-sm disabled:bg-gray-400 disabled:cursor-not-allowed"
+                  >
+                    {isProofreading ? (
+                      <>
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                        Proofreading...
+                      </>
+                    ) : (
+                      <>
+                        <CheckCircle className="w-4 h-4" />
+                        Proofread & Enhance
+                      </>
+                    )}
+                  </button>
+                </div>
+              )}
+
+              {/* Proofread Section */}
+              {proofreadContent && activeTab === "preview" && (
+                <div className="mt-8">
+                  <h3 className="text-lg font-semibold mb-3 flex items-center uppercase text-black dark:text-white">
+                    <CheckCircle className="w-5 h-5 mr-2 text-green-500" />
+                    Proofread Version
+                  </h3>
+
+                  <div className="border border-green-200 dark:border-green-900 rounded-lg p-4 bg-green-50 dark:bg-green-900/20 mb-4 overflow-y-auto max-h-[300px] thin-scrollbar">
+                    <div className="prose prose-sm max-w-none whitespace-pre-line dark:prose-invert">
+                      {proofreadContent}
+                    </div>
+                  </div>
+
+                  <div className="flex flex-wrap gap-3">
+                    <button
+                      onClick={() => copyToClipboard(proofreadContent)}
+                      className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-3 rounded-md transition-colors text-sm"
+                    >
+                      <Copy className="w-4 h-4" />
+                      Copy Proofread Version
+                    </button>
+
+                    <button
+                      onClick={() => downloadAsWord(proofreadContent)}
+                      className="flex items-center gap-2 bg-purple-600 hover:bg-purple-700 text-white px-4 py-3 rounded-md transition-colors text-sm"
+                    >
+                      <FileDown className="w-4 h-4" />
+                      Download as Word
+                    </button>
+
+                    <button
+                      onClick={() => downloadAsPdf(proofreadContent)}
+                      className="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white px-4 py-3 rounded-md transition-colors text-sm"
+                    >
+                      <FilePdf className="w-4 h-4" />
+                      Download as PDF
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </div>

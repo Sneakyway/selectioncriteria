@@ -16,7 +16,7 @@ export function SiteHeader() {
               <path d="M15,50 L85,50" fill="none" stroke="black" strokeWidth="2" />
             </svg>
           </div>
-          <span className="text-xl font-medium">AI Selection Criteria</span>
+          <span className="text-lg font-medium">AI Selection Criteria</span>
         </Link>
 
         <div className="flex items-center space-x-4">
