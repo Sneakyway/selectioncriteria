@@ -31,6 +31,7 @@ import {
   ArrowRight,
   Moon,
   Sun,
+  Download,
 } from "lucide-react"
 
 export default function AIGeneratorPage() {
@@ -62,6 +63,7 @@ export default function AIGeneratorPage() {
   })
 
   const responseRef = useRef<HTMLDivElement>(null)
+  const [mounted, setMounted] = useState(false)
 
   useEffect(() => {
     if (generatedContent) {
@@ -78,12 +80,19 @@ export default function AIGeneratorPage() {
   }, [generatedContent])
 
   useEffect(() => {
-    if (darkMode) {
-      document.documentElement.classList.add("dark")
-    } else {
-      document.documentElement.classList.remove("dark")
+    // Only run on client-side
+    if (typeof window !== "undefined") {
+      if (darkMode) {
+        document.documentElement.classList.add("dark")
+      } else {
+        document.documentElement.classList.remove("dark")
+      }
     }
   }, [darkMode])
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target
@@ -257,6 +266,24 @@ export default function AIGeneratorPage() {
     }
   }
 
+  const downloadAsPpt = (content: string) => {
+    if (content) {
+      // In a real implementation, you would use a library to create PPT
+      // For now, we'll create a simple text file with a .pptx extension
+      const blob = new Blob([content], {
+        type: "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+      })
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement("a")
+      a.href = url
+      a.download = "selection_criteria_presentation.pptx"
+      document.body.appendChild(a)
+      a.click()
+      document.body.removeChild(a)
+      URL.revokeObjectURL(url)
+    }
+  }
+
   const resetForm = () => {
     setFormData({
       criteriaQuestion: "",
@@ -318,7 +345,7 @@ export default function AIGeneratorPage() {
               <br />
               Try here.
             </p>
-            <a href="#" className="text-red-500 flex items-center hover:underline">
+            <a href="#" className="text-blue-500 flex items-center hover:underline">
               View Guides <ArrowRight className="w-4 h-4 ml-1" />
             </a>
           </div>
@@ -342,7 +369,7 @@ export default function AIGeneratorPage() {
           <div className="flex-1">
             <h3 className="text-xl font-semibold mb-2 text-gray-800">Cover Letter Examples</h3>
             <p className="text-gray-600 mb-4">Cover letter examples for any profession.</p>
-            <a href="#" className="text-red-500 flex items-center hover:underline">
+            <a href="#" className="text-blue-500 flex items-center hover:underline">
               View Examples <ArrowRight className="w-4 h-4 ml-1" />
             </a>
           </div>
@@ -361,6 +388,45 @@ export default function AIGeneratorPage() {
     </div>
   )
 
+  const renderDownloadTab = () => (
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-3xl mx-auto">
+      <div className="border border-gray-200 dark:border-gray-700 rounded-lg p-6 flex flex-col items-center text-center">
+        <div className="mb-4">
+          <FileText className="w-16 h-16 text-gray-800 dark:text-gray-200" />
+        </div>
+        <h3 className="text-xl font-semibold mb-4 text-gray-800 dark:text-gray-200">PDF Format</h3>
+        <button
+          onClick={() => downloadAsPdf(generatedContent || proofreadContent)}
+          className="flex items-center justify-center gap-2 bg-gray-900 hover:bg-black text-white px-4 py-3 rounded-md transition-colors text-sm w-full disabled:opacity-50 disabled:cursor-not-allowed"
+          disabled={!generatedContent && !proofreadContent}
+        >
+          <Download className="w-4 h-4" />
+          Download PDF
+        </button>
+      </div>
+
+      <div className="border border-gray-200 dark:border-gray-700 rounded-lg p-6 flex flex-col items-center text-center">
+        <div className="mb-4">
+          <FilePdf className="w-16 h-16 text-gray-800 dark:text-gray-200" />
+        </div>
+        <h3 className="text-xl font-semibold mb-4 text-gray-800 dark:text-gray-200">Word Document</h3>
+        <button
+          onClick={() => downloadAsWord(generatedContent || proofreadContent)}
+          className="flex items-center justify-center gap-2 bg-gray-900 hover:bg-black text-white px-4 py-3 rounded-md transition-colors text-sm w-full disabled:opacity-50 disabled:cursor-not-allowed"
+          disabled={!generatedContent && !proofreadContent}
+        >
+          <Download className="w-4 h-4" />
+          Download DOCX
+        </button>
+      </div>
+    </div>
+  )
+
+  if (!mounted) {
+    // Return a placeholder with the same structure but no dynamic content
+    return <div className="min-h-screen bg-gray-50 flex flex-col"></div>
+  }
+
   return (
     <div className={`min-h-screen ${darkMode ? "dark bg-gray-900" : "bg-gray-50"} flex flex-col`}>
       <div className="container mx-auto px-4 py-8 flex-grow">
@@ -378,7 +444,7 @@ export default function AIGeneratorPage() {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
           {/* Questionnaire Section - 40% */}
           <div className="lg:col-span-5 bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md">
-            <h2 className="text-xl font-semibold mb-6 flex items-center uppercase text-black dark:text-white">
+            <h2 className="text-lg font-semibold mb-6 flex items-center uppercase text-black dark:text-white">
               <FileText className="w-5 h-5 mr-2 text-blue-500" />
               Selection Criteria Questionnaire
             </h2>
@@ -391,7 +457,13 @@ export default function AIGeneratorPage() {
                 >
                   <FileQuestion className="w-4 h-4 mr-2 text-blue-500" />
                   Selection Criteria Question*
-                  <InfoTooltip text="Enter the selection criteria question you need to respond to" />
+                  <span className="group relative inline-block ml-1">
+                    <Info className="w-4 h-4 text-gray-400 cursor-help" />
+                    <span className="absolute left-0 bottom-full mb-2 hidden group-hover:block bg-black text-white text-xs rounded p-2 w-48 z-10">
+                      Enter the selection criteria question you need to respond to
+                      <span className="absolute top-full left-0 w-2 h-2 bg-black transform rotate-45 -mt-1"></span>
+                    </span>
+                  </span>
                 </label>
                 <textarea
                   id="criteriaQuestion"
@@ -413,7 +485,13 @@ export default function AIGeneratorPage() {
                     <span className="text-xs ml-1 text-gray-500 dark:text-gray-400">
                       (Situation, Task, Action, Result)
                     </span>
-                    <InfoTooltip text="STAR format helps structure your response with a clear Situation, Task, Action, Result" />
+                    <span className="group relative inline-block ml-1">
+                      <Info className="w-4 h-4 text-gray-400 cursor-help" />
+                      <span className="absolute left-0 bottom-full mb-2 hidden group-hover:block bg-black text-white text-xs rounded p-2 w-48 z-10">
+                        STAR format helps structure your response with a clear Situation, Task, Action, Result
+                        <span className="absolute top-full left-0 w-2 h-2 bg-black transform rotate-45 -mt-1"></span>
+                      </span>
+                    </span>
                   </div>
                   <div className="flex items-center">
                     <label htmlFor="useStar" className="relative inline-flex items-center cursor-pointer">
@@ -437,37 +515,19 @@ export default function AIGeneratorPage() {
                 </label>
               </div>
 
-              {/* Tone */}
-              <div>
-                <label
-                  htmlFor="tone"
-                  className="block text-sm font-medium text-black dark:text-white mb-1 flex items-center uppercase"
-                >
-                  <MessageSquare className="w-4 h-4 mr-2 text-blue-500" />
-                  Tone
-                  <InfoTooltip text="Choose the writing style for your response" />
-                </label>
-                <select
-                  id="tone"
-                  name="tone"
-                  value={formData.tone}
-                  onChange={handleInputChange}
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-sm"
-                >
-                  <option value="professional">Professional</option>
-                  <option value="confident">Confident</option>
-                  <option value="enthusiastic">Enthusiastic</option>
-                  <option value="formal">Formal</option>
-                </select>
-              </div>
-
-              {/* Humanize Toggle */}
+              {/* Humanize Toggle - Moved above Tone */}
               <div>
                 <label className="block text-sm font-medium text-black dark:text-white mb-1 flex items-center justify-between uppercase">
                   <div className="flex items-center">
                     <Sparkles className="w-4 h-4 mr-2 text-blue-500" />
                     Humanize Content
-                    <InfoTooltip text="Make the response sound more natural and conversational, as if written by a human" />
+                    <span className="group relative inline-block ml-1">
+                      <Info className="w-4 h-4 text-gray-400 cursor-help" />
+                      <span className="absolute left-0 bottom-full mb-2 hidden group-hover:block bg-black text-white text-xs rounded p-2 w-48 z-10">
+                        Make the response sound more natural and conversational, as if written by a human
+                        <span className="absolute top-full left-0 w-2 h-2 bg-black transform rotate-45 -mt-1"></span>
+                      </span>
+                    </span>
                   </div>
                   <div className="flex items-center">
                     <label htmlFor="humanize" className="relative inline-flex items-center cursor-pointer">
@@ -491,6 +551,36 @@ export default function AIGeneratorPage() {
                 </label>
               </div>
 
+              {/* Tone */}
+              <div>
+                <label
+                  htmlFor="tone"
+                  className="block text-sm font-medium text-black dark:text-white mb-1 flex items-center uppercase"
+                >
+                  <MessageSquare className="w-4 h-4 mr-2 text-blue-500" />
+                  Tone
+                  <span className="group relative inline-block ml-1">
+                    <Info className="w-4 h-4 text-gray-400 cursor-help" />
+                    <span className="absolute left-0 bottom-full mb-2 hidden group-hover:block bg-black text-white text-xs rounded p-2 w-48 z-10">
+                      Choose the writing style for your response
+                      <span className="absolute top-full left-0 w-2 h-2 bg-black transform rotate-45 -mt-1"></span>
+                    </span>
+                  </span>
+                </label>
+                <select
+                  id="tone"
+                  name="tone"
+                  value={formData.tone}
+                  onChange={handleInputChange}
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-sm"
+                >
+                  <option value="professional">Professional</option>
+                  <option value="confident">Confident</option>
+                  <option value="enthusiastic">Enthusiastic</option>
+                  <option value="formal">Formal</option>
+                </select>
+              </div>
+
               {/* Job Title and Experience on same line */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
@@ -500,7 +590,13 @@ export default function AIGeneratorPage() {
                   >
                     <Briefcase className="w-4 h-4 mr-2 text-blue-500" />
                     Job Title*
-                    <InfoTooltip text="Enter the job position you're applying for" />
+                    <span className="group relative inline-block ml-1">
+                      <Info className="w-4 h-4 text-gray-400 cursor-help" />
+                      <span className="absolute left-0 bottom-full mb-2 hidden group-hover:block bg-black text-white text-xs rounded p-2 w-48 z-10">
+                        Enter the job position you're applying for
+                        <span className="absolute top-full left-0 w-2 h-2 bg-black transform rotate-45 -mt-1"></span>
+                      </span>
+                    </span>
                   </label>
                   <input
                     type="text"
@@ -530,7 +626,13 @@ export default function AIGeneratorPage() {
                       <polyline points="12 6 12 12 16 14" />
                     </svg>
                     Years of Experience
-                    <InfoTooltip text="Select your years of relevant work experience" />
+                    <span className="group relative inline-block ml-1">
+                      <Info className="w-4 h-4 text-gray-400 cursor-help" />
+                      <span className="absolute left-0 bottom-full mb-2 hidden group-hover:block bg-black text-white text-xs rounded p-2 w-48 z-10">
+                        Select your years of relevant work experience
+                        <span className="absolute top-full left-0 w-2 h-2 bg-black transform rotate-45 -mt-1"></span>
+                      </span>
+                    </span>
                   </label>
                   <select
                     id="experience"
@@ -556,7 +658,13 @@ export default function AIGeneratorPage() {
                   >
                     <Building className="w-4 h-4 mr-2 text-blue-500" />
                     Current Employer
-                    <InfoTooltip text="Enter your current employer's name" />
+                    <span className="group relative inline-block ml-1">
+                      <Info className="w-4 h-4 text-gray-400 cursor-help" />
+                      <span className="absolute left-0 bottom-full mb-2 hidden group-hover:block bg-black text-white text-xs rounded p-2 w-48 z-10">
+                        Enter your current employer's name
+                        <span className="absolute top-full left-0 w-2 h-2 bg-black transform rotate-45 -mt-1"></span>
+                      </span>
+                    </span>
                   </label>
                   <input
                     type="text"
@@ -576,7 +684,13 @@ export default function AIGeneratorPage() {
                   >
                     <History className="w-4 h-4 mr-2 text-blue-500" />
                     Previous Employer
-                    <InfoTooltip text="Enter your previous employer's name" />
+                    <span className="group relative inline-block ml-1">
+                      <Info className="w-4 h-4 text-gray-400 cursor-help" />
+                      <span className="absolute left-0 bottom-full mb-2 hidden group-hover:block bg-black text-white text-xs rounded p-2 w-48 z-10">
+                        Enter your previous employer's name
+                        <span className="absolute top-full left-0 w-2 h-2 bg-black transform rotate-45 -mt-1"></span>
+                      </span>
+                    </span>
                   </label>
                   <input
                     type="text"
@@ -598,7 +712,13 @@ export default function AIGeneratorPage() {
                 >
                   <User className="w-4 h-4 mr-2 text-blue-500" />
                   Candidate First Name
-                  <InfoTooltip text="Enter your first name to personalize the response" />
+                  <span className="group relative inline-block ml-1">
+                    <Info className="w-4 h-4 text-gray-400 cursor-help" />
+                    <span className="absolute left-0 bottom-full mb-2 hidden group-hover:block bg-black text-white text-xs rounded p-2 w-48 z-10">
+                      Enter your first name to personalize the response
+                      <span className="absolute top-full left-0 w-2 h-2 bg-black transform rotate-45 -mt-1"></span>
+                    </span>
+                  </span>
                 </label>
                 <input
                   type="text"
@@ -618,7 +738,13 @@ export default function AIGeneratorPage() {
                 >
                   <Award className="w-4 h-4 mr-2 text-blue-500" />
                   Key Skills (comma separated)
-                  <InfoTooltip text="List relevant skills for the position" />
+                  <span className="group relative inline-block ml-1">
+                    <Info className="w-4 h-4 text-gray-400 cursor-help" />
+                    <span className="absolute left-0 bottom-full mb-2 hidden group-hover:block bg-black text-white text-xs rounded p-2 w-48 z-10">
+                      List relevant skills for the position
+                      <span className="absolute top-full left-0 w-2 h-2 bg-black transform rotate-45 -mt-1"></span>
+                    </span>
+                  </span>
                 </label>
                 <input
                   type="text"
@@ -646,7 +772,13 @@ export default function AIGeneratorPage() {
                     <path d="M12 15l-2-5 5-2-5-2 2-5-2 5-5 2 5 2-2 5z" />
                   </svg>
                   Notable Achievements
-                  <InfoTooltip text="List your notable accomplishments relevant to this role" />
+                  <span className="group relative inline-block ml-1">
+                    <Info className="w-4 h-4 text-gray-400 cursor-help" />
+                    <span className="absolute left-0 bottom-full mb-2 hidden group-hover:block bg-black text-white text-xs rounded p-2 w-48 z-10">
+                      List your notable accomplishments relevant to this role
+                      <span className="absolute top-full left-0 w-2 h-2 bg-black transform rotate-45 -mt-1"></span>
+                    </span>
+                  </span>
                 </label>
                 <textarea
                   id="achievements"
@@ -665,7 +797,13 @@ export default function AIGeneratorPage() {
                 >
                   <GraduationCap className="w-4 h-4 mr-2 text-blue-500" />
                   Education/Qualifications
-                  <InfoTooltip text="List your degrees, certifications, or other qualifications" />
+                  <span className="group relative inline-block ml-1">
+                    <Info className="w-4 h-4 text-gray-400 cursor-help" />
+                    <span className="absolute left-0 bottom-full mb-2 hidden group-hover:block bg-black text-white text-xs rounded p-2 w-48 z-10">
+                      List your degrees, certifications, or other qualifications
+                      <span className="absolute top-full left-0 w-2 h-2 bg-black transform rotate-45 -mt-1"></span>
+                    </span>
+                  </span>
                 </label>
                 <input
                   type="text"
@@ -686,7 +824,13 @@ export default function AIGeneratorPage() {
                 >
                   <Award className="w-4 h-4 mr-2 text-blue-500" />
                   Candidate Strengths
-                  <InfoTooltip text="List your key personal and professional strengths" />
+                  <span className="group relative inline-block ml-1">
+                    <Info className="w-4 h-4 text-gray-400 cursor-help" />
+                    <span className="absolute left-0 bottom-full mb-2 hidden group-hover:block bg-black text-white text-xs rounded p-2 w-48 z-10">
+                      List your key personal and professional strengths
+                      <span className="absolute top-full left-0 w-2 h-2 bg-black transform rotate-45 -mt-1"></span>
+                    </span>
+                  </span>
                 </label>
                 <textarea
                   id="candidateStrengths"
@@ -731,16 +875,16 @@ export default function AIGeneratorPage() {
           {/* Response Section - 60% */}
           <div className="lg:col-span-7 flex flex-col">
             <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md">
-              <h2 className="text-xl font-semibold mb-6 uppercase text-black dark:text-white">Generated Response</h2>
+              <h2 className="text-lg font-semibold mb-6 uppercase text-black dark:text-white">Generated Response</h2>
 
-              {/* Tab Navigation - Moved inside the response box */}
-              <div className="flex mb-4">
+              {/* Tab Navigation - Centered with 3 tabs */}
+              <div className="flex justify-center mb-4">
                 <div className="inline-flex rounded-md border border-gray-200 dark:border-gray-700 overflow-hidden">
                   <button
                     onClick={() => setActiveTab("preview")}
                     className={`flex items-center px-6 py-2 ${
                       activeTab === "preview"
-                        ? "bg-white dark:bg-gray-800 text-red-500 border-b-2 border-red-500"
+                        ? "bg-white dark:bg-gray-800 text-blue-500 border-b-2 border-blue-500"
                         : "bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
                     }`}
                   >
@@ -751,12 +895,23 @@ export default function AIGeneratorPage() {
                     onClick={() => setActiveTab("help")}
                     className={`flex items-center px-6 py-2 ${
                       activeTab === "help"
-                        ? "bg-white dark:bg-gray-800 text-red-500 border-b-2 border-red-500"
+                        ? "bg-white dark:bg-gray-800 text-blue-500 border-b-2 border-blue-500"
                         : "bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
                     }`}
                   >
                     <HelpCircle className="w-5 h-5 mr-2" />
                     Help Center
+                  </button>
+                  <button
+                    onClick={() => setActiveTab("download")}
+                    className={`flex items-center px-6 py-2 ${
+                      activeTab === "download"
+                        ? "bg-white dark:bg-gray-800 text-blue-500 border-b-2 border-blue-500"
+                        : "bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
+                    }`}
+                  >
+                    <Download className="w-5 h-5 mr-2" />
+                    Download
                   </button>
                 </div>
               </div>
@@ -767,6 +922,8 @@ export default function AIGeneratorPage() {
               >
                 {activeTab === "help" ? (
                   renderHelpCenterTab()
+                ) : activeTab === "download" ? (
+                  renderDownloadTab()
                 ) : error ? (
                   <div className="text-red-500 p-4">
                     <p className="font-medium">Error:</p>
